@@ -1,0 +1,10 @@
+[Unit]
+Description=Floating IP
+After=docker.service
+BindsTo=docker.service
+
+[Service]
+ExecStart=startx /etc/X11/Xsession /opt/start.sh
+
+[Install]
+WantedBy=multi-user.target

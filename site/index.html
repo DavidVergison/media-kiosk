@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js-yaml.js"></script>
+    <title>Zone de texte et Vidéo Dynamique</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #textbox {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            padding: 5px;
+            font-size: 16px;
+        }
+        #video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+        #myVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="textbox" autofocus maxlength="4">
+    <div id="video-container">
+        <video id="myVideo" loop>
+            Votre navigateur ne supporte pas la balise vidéo.
+        </video>
+    </div>
+
+    <script>
+        const textbox = document.getElementById('textbox');
+        const video = document.getElementById('myVideo');
+
+        let videoSources = {};
+
+        async function loadConfig() {
+            try {
+                const response = await fetch('/media/references.yaml');
+                const yamlText = await response.text();
+                const config = jsyaml.load(yamlText);
+                
+                videoSources = config.list.reduce((acc, item) => {
+                    acc[item.code] = `/media/${item.media}`;
+                    return acc;
+                }, {});
+
+                console.log('Configuration chargée:', videoSources);
+            } catch (error) {
+                console.error('Erreur lors du chargement de la configuration:', error);
+            }
+        }
+
+        textbox.addEventListener('input', function() {
+            const code = this.value;
+            if (videoSources.hasOwnProperty(code)) {
+                video.src = videoSources[code];
+                video.load();
+                video.play();
+                this.value = '';
+            }
+        });
+
+        // Garder le focus sur la zone de texte
+        setInterval(() => {
+            textbox.focus();
+        }, 100);
+
+        loadConfig()
+    </script>
+</body>
+</html>
